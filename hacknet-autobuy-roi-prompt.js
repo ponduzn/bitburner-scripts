@@ -84,7 +84,7 @@ export async function main(ns) {
         }
 
         //Sell hashes for income.
-        if (currentHashes > hashTarget + 10) {
+        if (currentHashes > hashTarget + 5) {
           ns.hacknet.spendHashes("Sell for Money", undefined, hashSellAmount);
         } 
         if (currentHashes > hashTarget) {
@@ -96,7 +96,7 @@ export async function main(ns) {
         //Determine status and execute
         if (best) {
             const actionDesc = best.type + (best.i >= 0 ? ` on Node ${best.i}` : "");
-            if (best.cost <= money) {
+            if (best.cost <= (money / 2)) {
                 status = actionDesc;
                 if (best.type === "new node") ns.hacknet.purchaseNode();
                 else if (best.type === "level") ns.hacknet.upgradeLevel(best.i, 1);
@@ -118,7 +118,7 @@ export async function main(ns) {
         var divLineLongTop    = TextTransforms.apply("┌─────────HackNet Manager─────────┐", [TextTransforms.Color.Black]);
         var divLineLongMiddle = TextTransforms.apply("├─────────────────────────────────┤", [TextTransforms.Color.Black]);
         var divLineLongBottom = TextTransforms.apply("└─────────────────────────────────┘", [TextTransforms.Color.Black]);
-        var moneyss           = TextTransforms.apply("Money: ", [TextTransforms.Color.LWhite]);
+        var moneyss           = TextTransforms.apply("Avail. $: ", [TextTransforms.Color.LWhite]);
         var nodesss           = TextTransforms.apply("Nodes: ", [TextTransforms.Color.LWhite]);
         var bestsss           = TextTransforms.apply("Best: ", [TextTransforms.Color.LWhite]);
         var costsss           = TextTransforms.apply("Cost: ", [TextTransforms.Color.LWhite]);
@@ -129,7 +129,7 @@ export async function main(ns) {
         var nodestatusss      = currentNodes + "/" + batchSize;
         var bestsscalc        = best.type + (best.i >= 0 ? " on Node " + best.i : "");
         var costssscalc       = "$" + ns.formatNumber(best.cost);
-        var moneysscalc       = "$" + ns.formatNumber(money);
+        var moneysscalc       = "$" + ns.formatNumber(money / 2);
         var hashIncomeSeclog  = hashIncomeSec.toPrecision(4) + "/s";
         var hashesCapacity    = ns.hacknet.hashCapacity();
         var currentHashesLog  = currentHashes.toPrecision(3) + "/" + hashesCapacity;
@@ -202,7 +202,6 @@ export async function main(ns) {
         }
     }
 
-
     function estimateGain(i, type, currentHashes, hashTarget) {
       const node = ns.hacknet.getNodeStats(i);
       const base = node.production;
@@ -212,10 +211,8 @@ export async function main(ns) {
           case "level": return base * 0.05;
           case "ram":   return base * 1.0;
           case "core":  return base * 0.5;
-          case "cache": return base * 0.05 * (1 + hashBufferFactor);
+          case "cache": return base * 0.03 * (1 + hashBufferFactor);
       }
       return 0.0001;
     }
-
-
 }
