@@ -1,3 +1,7 @@
+import {
+    TextTransforms
+} from "./text-transform.js";
+
 const colors = {
 	black: "\u001b[30m",
 	red: "\u001b[31m",
@@ -22,7 +26,7 @@ const colors = {
 export async function main(ns) {
     ns.disableLog("ALL");
     ns.clearLog();
-    ns.ui.openTail();
+    //ns.ui.openTail();
 
     function getAllServers() {
         const discovered = ["home"];
@@ -76,13 +80,16 @@ export async function main(ns) {
       let lastTarget = null;
 
       for (const target of allServers) {
-        if (target === "home" || target === "darkweb" || ns.getPurchasedServers().includes(target)) continue;
+        if (target === "home" || target === "darkweb" || target === "w0r1d_d43m0n" || ns.getPurchasedServers().includes(target)) continue;
         const server = ns.getServer(target);
 
         if (!server.hasAdminRights) {
           continue;
         }
         if (server.backdoorInstalled) {
+          continue;
+        }
+        if (target.startsWith("hacknet-server-")) {
           continue;
         }
 
@@ -116,28 +123,27 @@ export async function main(ns) {
 
     function display(ns, lastTarget, coolDown) {
       ns.clearLog();
-
-      const frameColor = colors.black;
-
       const bordercolor = colors.black;
-      const textColor = colors.white;
       const tarcolor = colors.yellow;
       const BOX_WIDTH = 47;
-      const borderLine = "=".repeat(BOX_WIDTH - 3);
-      const line = " Current target: " + tarcolor + lastTarget;
-      const line2 = " Waiting to try to backdoor more servers.";
-      const border = bordercolor + '|';
+      
+
+      const leftBorder = TextTransforms.apply("| ", [TextTransforms.Color.Black]);
+      const rightBorder = TextTransforms.apply(" |", [TextTransforms.Color.Black]);
+      const borderLine = TextTransforms.apply("=".repeat(BOX_WIDTH - 3), [TextTransforms.Color.Black]);
+      const currTargMsg = TextTransforms.apply("Current target: ".padEnd(17), [TextTransforms.Color.White]);
+      const waitinG = TextTransforms.apply("Waiting to try to backdoor more servers.".padEnd(BOX_WIDTH - 7), [TextTransforms.Color.White]);
+      const line = currTargMsg + tarcolor + lastTarget;
 
       if (coolDown) {
-        ns.print(bordercolor, borderLine);
-        ns.print(border, textColor, line.padEnd(BOX_WIDTH), border);
-        ns.print(bordercolor, borderLine);
+        ns.print(bordercolor + borderLine);
+        ns.print(leftBorder + line.padEnd(BOX_WIDTH + 14) + rightBorder);
+        ns.print(bordercolor + borderLine);
 
       } else {
-        ns.print(bordercolor, borderLine);
-        ns.print(border, textColor, line2.padEnd(BOX_WIDTH - 5), border);
-        ns.print(bordercolor, borderLine);
-
+        ns.print(bordercolor + borderLine);
+        ns.print(leftBorder + waitinG + rightBorder);
+        ns.print(bordercolor + borderLine);
       }
     }
 }
