@@ -8,19 +8,26 @@ export async function main(ns) {
     ns.clearLog();
     ns.ui.openTail();
 
-    const SLEEP_MS = 100;   // 100 ms loop
+    const SLEEP_MS = 200;
     let batchSize = Math.max(4, ns.hacknet.numNodes());
+    const currentNodes = ns.hacknet.numNodes();
 
-    let best = null;         // best action per loop
-    let status = "";         // human-readable status
+    let best = null;
+    let status = "";
+    let hashStatus = "";
 
     while (true) {
         const money = ns.getServerMoneyAvailable("home");
-        best = null;          // reset best each iteration
+        const currentHashes = ns.hacknet.numHashes(); 
+        const maxHashes = ns.hacknet.hashCapacity();
+        const fillRatio = currentHashes / maxHashes;
+        let hashIncomeSec = 0;
+        let hashTarget = 150;
+        let hashSellAmount = 1;
+        best = null;
         status = "";
 
         //New node
-        const currentNodes = ns.hacknet.numNodes();
         if (currentNodes < batchSize) {
             const newCost = ns.hacknet.getPurchaseNodeCost();
             if (newCost < Infinity) {
@@ -30,60 +37,132 @@ export async function main(ns) {
 
         //Existing nodes
         for (let i = 0; i < currentNodes; i++) {
-            consider("level", i, ns.hacknet.getLevelUpgradeCost(i, 1), estimateGain(i, "level"));
-            consider("ram",   i, ns.hacknet.getRamUpgradeCost(i, 1), estimateGain(i, "ram"));
-            consider("core",  i, ns.hacknet.getCoreUpgradeCost(i, 1), estimateGain(i, "core"));
+            consider("level", i, ns.hacknet.getLevelUpgradeCost(i, 1), estimateGain(i, "level", currentHashes, hashTarget));
+            consider("ram",   i, ns.hacknet.getRamUpgradeCost(i, 1), estimateGain(i, "ram", currentHashes, hashTarget));
+            consider("core",  i, ns.hacknet.getCoreUpgradeCost(i, 1), estimateGain(i, "core", currentHashes, hashTarget));
+            consider("cache", i, ns.hacknet.getCacheUpgradeCost(i, 1), estimateGain(i, "cache", currentHashes, hashTarget));
+        }
+
+        //Calculate hash income from all hacknet servers.
+        for (let i = 0; i < ns.hacknet.numNodes(); i++) {
+          hashIncomeSec += ns.hacknet.getNodeStats(i).production;
+        }
+
+        //Adjust buffer threshold of hashes based on hashes /s.
+        if (hashIncomeSec > 12) {
+          hashTarget = 1650;
+          hashSellAmount = 6;
+        } else if (hashIncomeSec > 11) {
+          hashTarget = 1500;
+          hashSellAmount = 5;
+        } else if (hashIncomeSec > 10) {
+          hashTarget = 1350;
+          hashSellAmount = 5;
+        } else if (hashIncomeSec > 9) {
+          hashTarget = 1200;
+          hashSellAmount = 4;
+        } else if (hashIncomeSec > 8) {
+          hashTarget = 1050;
+          hashSellAmount = 4;
+        } else if (hashIncomeSec > 6) {
+          hashTarget = 900;
+          hashSellAmount = 3;
+        } else if (hashIncomeSec > 5) {
+          hashTarget = 750;
+          hashSellAmount = 3;
+        } else if (hashIncomeSec > 4) {
+          hashTarget = 600;
+          hashSellAmount = 2;
+        } else if (hashIncomeSec > 3) {
+          hashTarget = 450;
+          hashSellAmount = 2;
+        } else if (hashIncomeSec > 2) {
+          hashTarget = 300;
+          hashSellAmount = 1;
+        } else {
+          hashTarget = 150;
+        }
+
+        //Sell hashes for income.
+        if (currentHashes > hashTarget + 10) {
+          ns.hacknet.spendHashes("Sell for Money", undefined, hashSellAmount);
+        } 
+        if (currentHashes > hashTarget) {
+          hashStatus = "Selling";
+        } else {
+          hashStatus = "Buffering";
         }
 
         //Determine status and execute
         if (best) {
             const actionDesc = best.type + (best.i >= 0 ? ` on Node ${best.i}` : "");
-
             if (best.cost <= money) {
-                // we have enough money → buy it
-                status = `Executing: ${actionDesc}`;
+                status = actionDesc;
                 if (best.type === "new node") ns.hacknet.purchaseNode();
                 else if (best.type === "level") ns.hacknet.upgradeLevel(best.i, 1);
                 else if (best.type === "ram") ns.hacknet.upgradeRam(best.i, 1);
                 else if (best.type === "core") ns.hacknet.upgradeCore(best.i, 1);
+                else if (best.type === "cache") ns.hacknet.upgradeCache(best.i, 1);
             } else {
-                // not enough money yet
-                status = `Next action: ${actionDesc}, waiting for money`;
+                status = `Waiting for money`;
             }
         } else {
             status = "No viable upgrades";
         }
 
-        var divLineShort = TextTransforms.apply("=== ", [TextTransforms.Color.Black]);
-        var title = TextTransforms.apply("Hacknet ROI Manager", [TextTransforms.Color.LWhite]);
-        var moneyss = TextTransforms.apply("Money : ", [TextTransforms.Color.LWhite]);
-        var nodesss = TextTransforms.apply("Nodes : ", [TextTransforms.Color.LWhite]);
-        var bestsss = TextTransforms.apply("Best : ", [TextTransforms.Color.LWhite]);
-        var costsss = TextTransforms.apply("Cost : ", [TextTransforms.Color.LWhite]);
-        var roissss = TextTransforms.apply("ROI : ", [TextTransforms.Color.LWhite]);
-        var statuss = TextTransforms.apply("Status : ", [TextTransforms.Color.LWhite]);
+        const BOX_WIDTH       = 20;
+        const INIT_PAD        = 29;
+        const leftBorder      = TextTransforms.apply("│", [TextTransforms.Color.Black]);
+        const rightBorder     = TextTransforms.apply("│", [TextTransforms.Color.Black]);
+
+        var divLineLongTop    = TextTransforms.apply("┌─────────HackNet Manager─────────┐", [TextTransforms.Color.Black]);
+        var divLineLongMiddle = TextTransforms.apply("├─────────────────────────────────┤", [TextTransforms.Color.Black]);
+        var divLineLongBottom = TextTransforms.apply("└─────────────────────────────────┘", [TextTransforms.Color.Black]);
+        var moneyss           = TextTransforms.apply("Money: ", [TextTransforms.Color.LWhite]);
+        var nodesss           = TextTransforms.apply("Nodes: ", [TextTransforms.Color.LWhite]);
+        var bestsss           = TextTransforms.apply("Best: ", [TextTransforms.Color.LWhite]);
+        var costsss           = TextTransforms.apply("Cost: ", [TextTransforms.Color.LWhite]);
+        var statuss           = TextTransforms.apply("Status: ", [TextTransforms.Color.LWhite]);
+        var hashess           = TextTransforms.apply("Hashes: ", [TextTransforms.Color.LWhite]);
+        var hashstatusss      = TextTransforms.apply("Hash Status: ", [TextTransforms.Color.LWhite]);
+        var hashIncomeStatus  = TextTransforms.apply("Hash Rate: ", [TextTransforms.Color.LWhite]);
+        var nodestatusss      = currentNodes + "/" + batchSize;
+        var bestsscalc        = best.type + (best.i >= 0 ? " on Node " + best.i : "");
+        var costssscalc       = "$" + ns.formatNumber(best.cost);
+        var moneysscalc       = "$" + ns.formatNumber(money);
+        var hashIncomeSeclog  = hashIncomeSec.toPrecision(4) + "/s";
+        var hashesCapacity    = ns.hacknet.hashCapacity();
+        var currentHashesLog  = currentHashes.toPrecision(3) + "/" + hashesCapacity;
         
 
         //Log
         ns.clearLog();
-        ns.print(divLineShort + title + divLineShort);
-        ns.print(moneyss + TextTransforms.apply("$" + ns.formatNumber(money), [TextTransforms.Color.Yellow]));
-        ns.print(nodesss + TextTransforms.apply(currentNodes + "/" + batchSize, [TextTransforms.Color.ChartsBlue]));
+        ns.print(divLineLongTop.padEnd(BOX_WIDTH));
+        ns.print(leftBorder + moneyss.padEnd(INIT_PAD) + TextTransforms.apply(moneysscalc.substring(0, BOX_WIDTH).padEnd(BOX_WIDTH), [TextTransforms.Color.Yellow]) + rightBorder);
+        ns.print(leftBorder + nodesss.padEnd(INIT_PAD) + TextTransforms.apply(nodestatusss.substring(0, BOX_WIDTH).padEnd(BOX_WIDTH), [TextTransforms.Color.ChartsBlue]) + rightBorder);
         if (best) {
-            ns.print(bestsss + TextTransforms.apply(best.type + (best.i >= 0 ? " on Node " + best.i : ""), [TextTransforms.Color.ChartsGreen]));
-            ns.print(costsss + TextTransforms.apply("$" + ns.formatNumber(best.cost), [TextTransforms.Color.Red]));
-            ns.print(roissss + TextTransforms.apply(best.roi.toFixed(2) + "s", [TextTransforms.Color.Blue]));
+            ns.print(leftBorder + bestsss.padEnd(INIT_PAD) + TextTransforms.apply(bestsscalc.substring(0, BOX_WIDTH).padEnd(BOX_WIDTH), [TextTransforms.Color.ChartsGreen]) + rightBorder);
+            ns.print(leftBorder + costsss.padEnd(INIT_PAD) + TextTransforms.apply(costssscalc.substring(0, BOX_WIDTH).padEnd(BOX_WIDTH), [TextTransforms.Color.Red]) + rightBorder);
         }
-        ns.print(statuss + TextTransforms.apply(status, [TextTransforms.Color.LPurple]));
+        ns.print(leftBorder + statuss.padEnd(INIT_PAD) + TextTransforms.apply(status.substring(0, BOX_WIDTH).padEnd(BOX_WIDTH), [TextTransforms.Color.LPurple]) + rightBorder);
+        if (currentHashes > 0) {
+          ns.print(divLineLongMiddle.padEnd(BOX_WIDTH));
+          ns.print(leftBorder + hashIncomeStatus.padEnd(INIT_PAD) + TextTransforms.apply(hashIncomeSeclog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
+          ns.print(leftBorder + hashess.padEnd(INIT_PAD) + TextTransforms.apply(currentHashesLog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
+          ns.print(leftBorder + hashstatusss.padEnd(INIT_PAD) + TextTransforms.apply(hashStatus.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
+        }
+        ns.print(divLineLongBottom.padEnd(BOX_WIDTH));
+        
 
         await ns.sleep(SLEEP_MS);
 
-        //Prompt for more upgrades. or exit.
+        //Prompt for more upgrades or exit.
         if (currentNodes >= batchSize && status === "No viable upgrades") {
           ns.clearLog();
-          ns.print(divLineShort + title + divLineShort);
-          ns.print(TextTransforms.apply("All nodes upgraded to current target.", [TextTransforms.Color.LCyan]));
-          ns.print(TextTransforms.apply("Current nodes: " + currentNodes, [TextTransforms.Color.Blue]));
+          ns.print(divLineLongTop.padEnd(BOX_WIDTH));
+          ns.print(leftBorder + TextTransforms.apply("All nodes upgraded to current target.", [TextTransforms.Color.LCyan]) + rightBorder);
+          ns.print(leftBorder + TextTransforms.apply("Current nodes: " + currentNodes, [TextTransforms.Color.Blue]) + rightBorder);
+          ns.print(divLineLongBottom.padEnd(BOX_WIDTH));
           
 
           const moreRaw = await ns.prompt(
@@ -94,21 +173,20 @@ export async function main(ns) {
           const more = Math.max(0, Math.floor(Number(moreRaw)));
 
           if (!Number.isFinite(more) || more <= 0) {
-              ns.print(TextTransforms.apply("Hacknet expansion complete.", [TextTransforms.Color.LPurple]));
+              ns.print(leftBorder + TextTransforms.apply("✨ Hacknet expansion complete. ✨", [TextTransforms.Color.LPurple]) + rightBorder);
               await ns.sleep(1000);
-              ns.print(TextTransforms.apply("Exiting...", [TextTransforms.Color.LRed]));
+              ns.print(leftBorder + TextTransforms.apply("Exiting...", [TextTransforms.Color.LRed]) + rightBorder);
               await ns.sleep(3000);
               ns.ui.closeTail();
               return;
           }
 
           if (ns.hacknet.getPurchaseNodeCost() > money * 0.25) {
-            ns.print("⚠ Hacknet prices are very high. Expansion may be inefficient.");
+            ns.print(leftBorder + "Hacknet prices are very high." + rightBorder);
           }
 
-          // Increase the ceiling
           batchSize += more;
-          ns.print(`New target: ${batchSize} nodes`);
+          ns.print(leftBorder + `New target: ${batchSize} nodes` + rightBorder);
           await ns.sleep(1000);
         }
     }
@@ -124,20 +202,20 @@ export async function main(ns) {
         }
     }
 
-    function estimateGain(i, type) {
-        const node = ns.hacknet.getNodeStats(i);
 
-        if (type === "level") {
-            // level upgrades ~7% production gain
-            return node.production * 0.07;
-        } else if (type === "ram") {
-            // RAM doubles production per upgrade
-            return node.production * 1;
-        } else if (type === "core") {
-            // each core adds ~50% production
-            return node.production * 0.5;
-        } else {
-            return 0.01; // fallback
-        }
+    function estimateGain(i, type, currentHashes, hashTarget) {
+      const node = ns.hacknet.getNodeStats(i);
+      const base = node.production;
+      const hashBufferFactor = Math.min(1, currentHashes / hashTarget);
+
+      switch(type) {
+          case "level": return base * 0.05;
+          case "ram":   return base * 1.0;
+          case "core":  return base * 0.5;
+          case "cache": return base * 0.05 * (1 + hashBufferFactor);
+      }
+      return 0.0001;
     }
+
+
 }
