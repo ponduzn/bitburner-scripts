@@ -4,13 +4,11 @@ import {
 
 /** @param {NS} ns */
 export async function main(ns) {
-
   ns.disableLog("ALL");
   ns.clearLog();
   ns.ui.openTail();
 
   const home = "home";
-
   const started = {
         hackScr: false,
         statsScr: false,
@@ -20,7 +18,11 @@ export async function main(ns) {
         homeBoostScr: false,
         hacknetScr: false,
         backdoorScr: false,
-        allBought: false
+        augAutoBuy: false,
+        autoJoinFac: false,
+        buyProgScr: false,
+        sleeves: false,
+        homeUpg: false
   };
 
   while (true) {
@@ -34,136 +36,59 @@ export async function main(ns) {
     const hasTixExchAcc = ns.stock.has4SDataTIXAPI();
     const hasWseAcc = ns.stock.hasWSEAccount();
     const hasFormApi = ns.fileExists("Formulas.exe", home);
-    const hasTor = ns.hasTorRouter();
-    const hasBruteSSH = ns.fileExists("BruteSSH.exe", home);
-    const hasFTPC = ns.fileExists("FTPCrack.exe", home);
-    const hasRelaySMTP = ns.fileExists("relaySMTP.exe", home);
-    const hasHTTP = ns.fileExists("HTTPWorm.exe", home);
-    const hasSQL = ns.fileExists("SQLInject.exe", home);
-    const servProf = ns.fileExists("ServerProfiler.exe", home);
-    const hasDeepV1 = ns.fileExists("DeepscanV1.exe", home);
-    const hasDeepV2 = ns.fileExists("DeepscanV2.exe", home);
-    const hasAutoL = ns.fileExists("AutoLink.exe", home);
-
-
-    //Buy or create Tor Router and Programs.
-    if (!hasTor && myMoney > 200_000) {
-      ns.singularity.purchaseTor();
-    }
-    if (!hasFormApi) {
-      if (myMoney > 5_000_000_000) {
-          ns.singularity.purchaseProgram("Formulas.exe");
-      } else if (myHackLevel > 1000 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("Formulas.exe");
-      }
-    }
-    if (!hasBruteSSH) {
-      if (myMoney > 500_000) {
-          ns.singularity.purchaseProgram("BruteSSH.exe");
-      } else if (myHackLevel > 50 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("BruteSSH.exe");
-      }
-    }
-    if (!hasFTPC && myMoney > 1_500_000) {
-      if (myMoney > 1_500_000) {
-        ns.singularity.purchaseProgram("FTPCrack.exe");
-      } else if (myHackLevel > 5000 && !ns.singularity.isBusy()) {
-        ns.singularity.createProgram("FTPCrack.exe");
-      }
-    }
-    if (!hasRelaySMTP) {
-      if (myMoney > 5_000_000) {
-          ns.singularity.purchaseProgram("relaySMTP.exe");
-      } else if (myHackLevel > 250 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("relaySMTP.exe");
-      }
-    }
-    if (!hasHTTP) {
-      if (myMoney > 5_000_000) {
-          ns.singularity.purchaseProgram("HTTPWorm.exe");
-      } else if (myHackLevel > 500 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("HTTPWorm.exe");
-      }
-    }
-    if (!hasSQL) {
-      if (myMoney > 250_000_000) {
-          ns.singularity.purchaseProgram("SQLInject.exe");
-      } else if (myHackLevel > 750 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("SQLInject.exe");
-      }
-    }
-    if (!servProf) {
-      if (myMoney > 500_000) {
-          ns.singularity.purchaseProgram("ServerProfiler.exe");
-      } else if (myHackLevel > 75 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("ServerProfiler.exe");
-      }
-    }
-    if (!hasDeepV1) {
-      if (myMoney > 500_000) {
-          ns.singularity.purchaseProgram("DeepscanV1.exe");
-      } else if (myHackLevel > 75 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("DeepscanV1.exe");
-      }
-    }
-    if (!hasDeepV2) {
-      if (myMoney > 25_000_000) {
-          ns.singularity.purchaseProgram("DeepscanV2.exe");
-      } else if (myHackLevel > 400 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("DeepscanV2.exe");
-      }
-    }
-    if (!hasAutoL) {
-      if (myMoney > 1_000_000) {
-          ns.singularity.purchaseProgram("AutoLink.exe");
-      } else if (myHackLevel > 25 && !ns.singularity.isBusy()) {
-          ns.singularity.createProgram("AutoLink.exe");
-      }
-    }
-
-    if (hasTor && hasFormApi && hasBruteSSH && hasFTPC && hasRelaySMTP && hasHTTP && hasSQL && servProf && hasDeepV1 && hasDeepV2 && hasAutoL) {
-          allBought = true;
-        }
-
+    const homeRamAm = ns.getServer(home).maxRam; 
 
     //Control script hacking servers.
     if (!started.hackScr && !ns.isRunning("target-switch-hack-all-s.js", home)) {
       if (ns.exec("target-switch-hack-all-s.js", home) !== 0) started.hackScr = true;
     }
-
     //Custom stats for overview.
     if (!started.statsScr && !ns.isRunning("customstatsV2.js", home)) {
       if (ns.exec("customstatsV2.js", home) !== 0) started.statsScr = true;
     }
-
+    //sleeves automation.
+    if (!started.sleeves && homeRamAm >= 128 && !ns.isRunning("sleevesV3.js", home)) {
+      if (ns.exec("sleevesV3.js", home) !== 0) started.sleeves = true;
+    }
+    //Upgrade home ram and cpu.
+    if (!started.homeUpg && !ns.isRunning("homeupgrade.js", home)) {
+      if (ns.exec("homeupgrade.js", home) !== 0) started.homeUpg = true;
+    }
+    //Auto Buy programs.
+    if (!started.buyProgScr && !ns.isRunning("buy-programs.js", home)) {
+      if (ns.exec("buy-programs.js", home) !== 0) started.buyProgScr = true;
+    }
+    //Auto join factions.
+    if (!started.autoJoinFac && !ns.isRunning("auto-join-faction.js", home)) {
+      if (ns.exec("auto-join-faction.js", home) !== 0) started.autoJoinFac = true;
+    }
     //Buy servers.
     if (!started.buyServersScr && myMoney > 1_000_000 && !ns.isRunning("buy-servers.js", home)) {
       if (ns.exec("buy-servers.js", home) !== 0) started.buyServersScr = true;
     }
-
     //Stock trading.
-    if (!started.stocksScr && has4s && hasTixAcc && hasWseAcc && hasTixExchAcc && !ns.isRunning("stocktrader-grok.js", home)) {
+    if (!started.stocksScr && homeRamAm >= 256 && has4s && hasTixAcc && hasWseAcc && hasTixExchAcc && !ns.isRunning("stocktrader-grok.js", home)) {
       if (ns.exec("stocktrader-grok.js", home) !== 0) started.stocksScr = true;
     }
-
     //Gang automation.
     if (!started.gangScr && hasGang && !ns.isRunning("gang-managerV2.js", home) && hasFormApi) {
       if (ns.exec("gang-managerV2.js", home) !== 0) started.gangScr = true;
     }
-
     //Hacknet autobuyer.
-    if (!started.hacknetScr && myHackLevel > 100 && myMoney > 100_000_000 && !ns.isRunning("hacknet-autobuy-roi-prompt.js", home)) {
-      if (ns.exec("hacknet-autobuy-roi-prompt.js", home) !== 0) started.hacknetScr = true;
+    if (!started.hacknetScr && !ns.isRunning("hacknet-server-autobuy-roi.js", home)) {
+      if (ns.exec("hacknet-server-autobuy-roi.js", home) !== 0) started.hacknetScr = true;
     }
-
     //Auto backdoor
     if (!started.backdoorScr && myHackLevel > 100 && !ns.isRunning("backdoor.js", home)) {
       if (ns.exec("backdoor.js", home) !== 0) started.backdoorScr = true;
     }
-
     //Hack'n rep boost on home.
-    if (!started.homeBoostScr && myHackLevel > 100 && ns.getServerMaxRam(home) >= 512 && !ns.isRunning("homehackboost.js", home)) {
+    if (!started.homeBoostScr && myHackLevel > 100 && homeRamAm >= 512 && !ns.isRunning("homehackboost.js", home)) {
       if (ns.exec("homehackboost.js", home) !== 0) started.homeBoostScr = true;
+    }
+    //Auto buy augments and restart.
+    if (!started.augAutoBuy && myMoney > 5_000_000_000 && !ns.isRunning("auto-augment-buy-reset.js", home)) {
+      if (ns.exec("auto-augment-buy-reset.js", home) !== 0) started.augAutoBuy = true;
     }
 
 
@@ -174,38 +99,58 @@ export async function main(ns) {
     if (ns.isRunning("stocktrader-grok.js", home)) started.stocksScr = true;
     if (ns.isRunning("gang-managerV2.js", home)) started.gangScr = true;
     if (ns.isRunning("homehackboost.js", home)) started.homeBoostScr = true;
-    if (ns.isRunning("hacknet-autobuy-roi-prompt.js", home)) started.hacknetScr = true;
+    if (ns.isRunning("hacknet-server-autobuy-roi.js", home)) started.hacknetScr = true;
     if (ns.isRunning("backdoor.js", home)) started.backdoorScr = true;
+    if (ns.isRunning("auto-augment-buy-reset.js", home)) started.augAutoBuy = true;
+    if (ns.isRunning("auto-join-faction.js", home)) started.autoJoinFac = true;
+    if (ns.isRunning("buy-programs.js", home)) started.buyProgScr = true;
+    if (ns.isRunning("sleevesV3.js", home)) started.sleeves = true;
+    if (ns.isRunning("homeupgrade.js", home)) started.homeUpg = true;
 
-    var divLineLong = TextTransforms.apply("===============================", [TextTransforms.Color.Black]);
 
     //logging:
+    const BOX_WIDTH = 23;
+    const leftBorder = TextTransforms.apply("| ", [TextTransforms.Color.Black]);
+    const rightBorder = TextTransforms.apply(" |", [TextTransforms.Color.Black]);
+    const divLineLong = TextTransforms.apply("===================================", [TextTransforms.Color.Black]);
     ns.print(divLineLong);
-    if (started.hackScr === true) ns.print("Hack Control script     = " + TextTransforms.apply(started.hackScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.hackScr === false) ns.print("Hack Control script     = " + TextTransforms.apply(started.hackScr, [TextTransforms.Color.DRed]));
-    if (started.statsScr === true) ns.print("Extra Overview stats    = " + TextTransforms.apply(started.statsScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.statsScr === false) ns.print("Extra Overview stats    = " + TextTransforms.apply(started.statsScr, [TextTransforms.Color.DRed]));
-    if (started.buyServersScr === true) ns.print("Server buy script       = " + TextTransforms.apply(started.buyServersScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.buyServersScr === false) ns.print("Server buy script       = " + TextTransforms.apply(started.buyServersScr, [TextTransforms.Color.DRed]));
-    if (started.stocksScr === true) ns.print("Stock trader script     = " + TextTransforms.apply(started.stocksScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.stocksScr === false) ns.print("Stock trader script     = " + TextTransforms.apply(started.stocksScr, [TextTransforms.Color.DRed]));
-    if (started.gangScr === true) ns.print("Gang automation         = " + TextTransforms.apply(started.gangScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.gangScr === false) ns.print("Gang automation         = " + TextTransforms.apply(started.gangScr, [TextTransforms.Color.DRed]));
-    if (started.homeBoostScr === true) ns.print("Hack'n rep boost @ home = " + TextTransforms.apply(started.homeBoostScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.homeBoostScr === false) ns.print("Hack'n rep boost @ home = " + TextTransforms.apply(started.homeBoostScr, [TextTransforms.Color.DRed]));
-    if (started.hacknetScr === true) ns.print("Hacknet autobuyer       = " + TextTransforms.apply(started.hacknetScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.hacknetScr === false) ns.print("Hacknet autobuyer       = " + TextTransforms.apply(started.hacknetScr, [TextTransforms.Color.DRed]));
-    if (started.backdoorScr === true) ns.print("Auto backdoor           = " + TextTransforms.apply(started.backdoorScr, [TextTransforms.Color.ChartsBlue]));
-    if (started.backdoorScr === false) ns.print("Auto backdoor           = " + TextTransforms.apply(started.backdoorScr, [TextTransforms.Color.DRed]));
-    if (started.allBought === true) ns.print("All Programs Bought      = " + TextTransforms.apply(started.allBought, [TextTransforms.Color.ChartsBlue]));
-    if (started.allBought === false) ns.print("All Programs Bought     = " + TextTransforms.apply(started.allBought, [TextTransforms.Color.DRed]));
-
+    if (started.hackScr === true) ns.print(leftBorder + "Hack Control script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.hackScr === false) ns.print(leftBorder + "Hack Control script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.statsScr === true) ns.print(leftBorder + "Extra Overview stats".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.statsScr === false) ns.print(leftBorder + "Extra Overview stats".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]));
+    if (started.buyServersScr === true) ns.print(leftBorder + "Server buy script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.buyServersScr === false) ns.print(leftBorder + "Server buy script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.stocksScr === true) ns.print(leftBorder + "Stock trader script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.stocksScr === false) ns.print(leftBorder + "Stock trader script".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.gangScr === true) ns.print(leftBorder + "Gang automation".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.gangScr === false) ns.print(leftBorder + "Gang automation".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.homeBoostScr === true) ns.print(leftBorder + "Hack'n rep boost @ home".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.homeBoostScr === false) ns.print(leftBorder + "Hack'n rep boost @ home".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.hacknetScr === true) ns.print(leftBorder + "Hacknet autobuyer".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.hacknetScr === false) ns.print(leftBorder + "Hacknet autobuyer".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.backdoorScr === true) ns.print(leftBorder + "Auto backdoor".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.backdoorScr === false) ns.print(leftBorder + "Auto backdoor".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.augAutoBuy === true) ns.print(leftBorder + "Aug auto buy".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.augAutoBuy === false) ns.print(leftBorder + "Aug auto buy".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.autoJoinFac === true) ns.print(leftBorder + "Auto join factions".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.autoJoinFac === false) ns.print(leftBorder + "Auto join factions".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.buyProgScr === true) ns.print(leftBorder + "Auto Buy programs".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.buyProgScr === false) ns.print(leftBorder + "Auto Buy programs".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.sleeves === true) ns.print(leftBorder + "Sleeves automation".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.sleeves === false) ns.print(leftBorder + "Sleeves automation".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.homeUpg === true) ns.print(leftBorder + "Home upgrading".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.homeUpg === false) ns.print(leftBorder + "Home upgrading".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
     ns.print(divLineLong);
 
     //Exit if all flags = true.
     if (Object.values(started).every(v => v)) {
-      ns.tprint("All startup scripts launched once.");
-      await ns.sleep(5000);
+      const allDone = "✨ All scripts started once. ✨";
+      ns.clearLog();
+      ns.print(divLineLong);
+      ns.print(leftBorder + TextTransforms.apply(allDone.padEnd(BOX_WIDTH), [TextTransforms.Color.Yellow]) + rightBorder);
+      ns.print(divLineLong);
+      await ns.sleep(10000);
+      ns.ui.closeTail();
       return;
     }
     await ns.sleep(1000);
