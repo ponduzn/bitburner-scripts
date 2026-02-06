@@ -7,6 +7,8 @@ export async function main(ns) {
     ns.disableLog("ALL");
     ns.clearLog();
     ns.ui.openTail();
+    ns.ui.resizeTail(340, 300);
+    ns.ui.setTailTitle("Hacknet Manager");
 
     const SLEEP_MS = 200;
     const MAX_NODES = 300;
@@ -33,22 +35,22 @@ export async function main(ns) {
 
         //Adjust buffer threshold of hashes based on hashes /s.
         if (hashIncomeSec > 1024) {
-          hashTarget = 120000;
+          hashTarget = 240000;
           hashSellAmount = 1024;
         } else if (hashIncomeSec > 512) {
-          hashTarget = 60000;
+          hashTarget = 120000;
           hashSellAmount = 512;
         } else if (hashIncomeSec > 256) {
-          hashTarget = 30000;
+          hashTarget = 60000;
           hashSellAmount = 256;
         } else if (hashIncomeSec > 128) {
-          hashTarget = 15000;
+          hashTarget = 30000;
           hashSellAmount = 128;
         } else if (hashIncomeSec > 64) {
-          hashTarget = 8400;
+          hashTarget = 15000;
           hashSellAmount = 64;
         } else if (hashIncomeSec > 32) {
-          hashTarget = 4200;
+          hashTarget = 8500;
           hashSellAmount = 32;
         } else if (hashIncomeSec > 16) {
           hashTarget = 2100;
@@ -73,15 +75,15 @@ export async function main(ns) {
 
         //Existing nodes
         for (let i = 0; i < currentNodes; i++) {
-            consider("level", i, ns.hacknet.getLevelUpgradeCost(i, 1), estimateGain(ns, i, "level", currentHashes, hashTarget));
-            consider("ram",   i, ns.hacknet.getRamUpgradeCost(i, 1), estimateGain(ns, i, "ram", currentHashes, hashTarget));
-            consider("core",  i, ns.hacknet.getCoreUpgradeCost(i, 1), estimateGain(ns, i, "core", currentHashes, hashTarget));
-            consider("cache", i, ns.hacknet.getCacheUpgradeCost(i, 1), estimateGain(ns, i, "cache", currentHashes, hashTarget));
+          consider("level", i, ns.hacknet.getLevelUpgradeCost(i, 1), estimateGain(ns, i, "level", currentHashes, hashTarget));
+          consider("ram",   i, ns.hacknet.getRamUpgradeCost(i, 1), estimateGain(ns, i, "ram", currentHashes, hashTarget));
+          consider("core",  i, ns.hacknet.getCoreUpgradeCost(i, 1), estimateGain(ns, i, "core", currentHashes, hashTarget));
+          consider("cache", i, ns.hacknet.getCacheUpgradeCost(i, 1), estimateGain(ns, i, "cache", currentHashes, hashTarget));
         }
         
         //Sell hashes for income.
         if (currentHashes > hashTarget + 5) {
-          ns.hacknet.spendHashes("Sell for Money", undefined, hashSellAmount);
+          ns.hacknet.spendHashes("Sell for Money", undefined, hashIncomeSec / 4); //hashSellAmount or hashIncomeSec / 4
         } 
         if (currentHashes > hashTarget) {
           hashStatus = "Selling";
@@ -92,7 +94,7 @@ export async function main(ns) {
         //Determine status and execute
         if (best) {
             const actionDesc = best.type + (best.i >= 0 ? ` on Node ${best.i}` : "");
-            if (best.cost <= (money / 2)) {
+            if (best.cost <= (money / 4)) {
                 status = actionDesc;
                 if (best.type === "new node") ns.hacknet.purchaseNode();
                 else if (best.type === "level") ns.hacknet.upgradeLevel(best.i, 1);
@@ -125,7 +127,7 @@ export async function main(ns) {
         var moneysscalc       = "$" + ns.formatNumber(money / 2);
         var hashIncomeSeclog  = hashIncomeSec.toPrecision(4) + "/s";
         var hashesCapacity    = ns.hacknet.hashCapacity();
-        var currentHashesLog  = ns.formatNumber(currentHashes) + "/" + hashesCapacity;
+        var currentHashesLog  = ns.formatNumber(currentHashes, 2) + "/" + ns.formatNumber(hashesCapacity, 2);
         
 
         //Log
@@ -191,7 +193,7 @@ export async function main(ns) {
           case "core":  return ns.hacknet.getNodeStats(i).production * 0.5;
           case "cache": {
               const base = ns.hacknet.getNodeStats(i).production;
-              const hashBufferFactor = Math.min(0.75, currentHashes / hashTarget);
+              const hashBufferFactor = Math.min(0.25, currentHashes / hashTarget);
               return base * 0.02 * (1 + hashBufferFactor);
           }
       }
