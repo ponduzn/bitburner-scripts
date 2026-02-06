@@ -1,7 +1,7 @@
 /** @param {NS} ns */
 export async function main(ns) {
     let lastRedeploy = 0;
-    const REDEPLOY_INTERVAL = 10 * 60 * 1000; // 10 minutes
+    const REDEPLOY_INTERVAL = 15 * 60 * 1000; // 10 minutes
     const worker = "workerV2.js";
 
     function getAllServers() {
@@ -59,16 +59,16 @@ export async function main(ns) {
 
         for (const serv of servers) {
             if (serv === "home") continue;
+            if (serv.startsWith("hacknet-server-")) continue;
 
-            const maxRam = ns.getServerMaxRam(serv);
-            if (maxRam === 0) continue;
+            
 
             const isPserv = ns.getPurchasedServers().includes(serv);
             if (!isPserv) {
                 if (ns.getServerRequiredHackingLevel(serv) > myLevel) continue;
                 if (ns.getServerNumPortsRequired(serv) > openPorts) continue;
             }
-
+            
             if (!ns.hasRootAccess(serv)) {
                 if (ns.fileExists("BruteSSH.exe")) ns.brutessh(serv);
                 if (ns.fileExists("FTPCrack.exe")) ns.ftpcrack(serv);
@@ -77,6 +77,9 @@ export async function main(ns) {
                 if (ns.fileExists("SQLInject.exe")) ns.sqlinject(serv);
                 ns.nuke(serv);
             }
+
+            const maxRam = ns.getServerMaxRam(serv);
+            if (maxRam === 0) continue;
 
             const processes = ns.ps(serv);
             const running = processes.find(p => p.filename === worker);
