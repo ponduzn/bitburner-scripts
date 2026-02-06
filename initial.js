@@ -7,6 +7,8 @@ export async function main(ns) {
   ns.disableLog("ALL");
   ns.clearLog();
   ns.ui.openTail();
+  ns.ui.resizeTail(340, 390);
+  ns.ui.setTailTitle("Initialization");
 
   const home = "home";
   const started = {
