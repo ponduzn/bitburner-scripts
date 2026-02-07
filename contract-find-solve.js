@@ -2,8 +2,8 @@ import {solvers} from "/solvers.js";
 
 export async function main(ns) {
     ns.disableLog("ALL");
-    ns.ui.openTail();
-    ns.ui.resizeTail(300, 100);
+    //ns.ui.openTail();
+    ns.ui.resizeTail(400, 100);
     ns.ui.setTailTitle("Contract Solver");
 
     while (true) {
@@ -25,6 +25,7 @@ export function getContracts(ns) {
     const contracts = [];
     for (const host of getAllHosts(ns)) {
       if (host.startsWith("hacknet-server-")) continue;
+      if (host === "home" || host === "darkweb" || host === "w0r1d_d43m0n" || ns.getPurchasedServers().includes(host)) continue;
         for (const file of ns.ls(host)) {
             if (file.match(/\.cct$/)) {
                 const contract = {
