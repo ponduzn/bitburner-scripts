@@ -35,9 +35,13 @@ let min_winChance = Number.MAX_VALUE;
 
 /** @param {NS} ns */
 export async function main(ns) {
+  
 	ns.disableLog("ALL");
 	//ns.clearLog();
 	ns.ui.openTail();
+  ns.ui.resizeTail(495, 440);
+  ns.ui.setTailTitle("Gang Manager");
+  ns.ui.moveTail(+1605, +30);
 	combatgang = !ns.gang.getGangInformation().isHacking;
 	for (let equ of ns.gang.getEquipmentNames()) {
 		let prio = 5;
@@ -198,8 +202,11 @@ function GetRelevantSkill(gangster) {
  * @returns {number}
  */
 function GiveAssignments(ns, gangInfo, memberarray) {
-	let NumberReadyWar = 0;
-	for (let member of memberarray) {
+	  let NumberReadyWar = 0;
+
+    
+    for (let member of memberarray) {
+
 		const skillLevel = GetRelevantSkill(member);
 		const war = ns.gang.getTaskStats("Territory Warfare");
 
@@ -273,8 +280,10 @@ function GiveAssignments(ns, gangInfo, memberarray) {
 
 		ns.gang.setMemberTask(member.name, task.name);
 	}
+  
 
 }
+
 /** 
  * @param {NS} ns
  * @param {GangGenInfo} gangInfo
