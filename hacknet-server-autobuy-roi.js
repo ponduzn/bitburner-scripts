@@ -7,8 +7,9 @@ export async function main(ns) {
     ns.disableLog("ALL");
     ns.clearLog();
     ns.ui.openTail();
-    ns.ui.resizeTail(340, 300);
+    ns.ui.resizeTail(340, 340);
     ns.ui.setTailTitle("Hacknet Manager");
+    ns.ui.moveTail(+2025, +680);
 
     const SLEEP_MS = 200;
     const MAX_NODES = 20;
@@ -95,8 +96,8 @@ export async function main(ns) {
           status = "No viable upgrades";
       }
 
-      const BOX_WIDTH       = 20;
-      const INIT_PAD        = 29;
+      const BOX_WIDTH       = 19;
+      const INIT_PAD        = 30;
       const leftBorder      = TextTransforms.apply("│", [TextTransforms.Color.Black]);
       const rightBorder     = TextTransforms.apply("│", [TextTransforms.Color.Black]);
       var divLineLongTop    = TextTransforms.apply("┌─────────HackNet Manager─────────┐", [TextTransforms.Color.Black]);
@@ -113,7 +114,10 @@ export async function main(ns) {
       var nodestatusss      = ns.formatNumber(currentNodes, 0);
       var moneysscalc       = "$" + ns.formatNumber(money / 2);
       var hashIncomeSeclog  = hashIncomeSec.toPrecision(4) + "/s";
-      
+      var sellAmStatus      = TextTransforms.apply("Sell Target:  ", [TextTransforms.Color.LWhite]);
+      var sellAm            = TextTransforms.apply("Sell Am.:  ", [TextTransforms.Color.LWhite]);
+      var sellAmLog         = ns.formatNumber(Math.min(Math.floor(overflow / 4), Math.floor(hashIncomeSec / 4)), 0);
+      var overflowLog       = ns.formatNumber(hashesCapacity / 2 + 8, 0);
       var currentHashesLog  = ns.formatNumber(currentHashes, 2) + "/" + ns.formatNumber(hashesCapacity, 2);
       
 
@@ -135,6 +139,8 @@ export async function main(ns) {
         ns.print(leftBorder + hashIncomeStatus.padEnd(INIT_PAD) + TextTransforms.apply(hashIncomeSeclog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
         ns.print(leftBorder + hashess.padEnd(INIT_PAD) + TextTransforms.apply(currentHashesLog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
         ns.print(leftBorder + hashstatusss.padEnd(INIT_PAD) + TextTransforms.apply(hashStatus.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
+        ns.print(leftBorder + sellAmStatus.padEnd(INIT_PAD) + TextTransforms.apply(overflowLog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
+        ns.print(leftBorder + sellAm.padEnd(INIT_PAD) + TextTransforms.apply(sellAmLog.padEnd(BOX_WIDTH), [TextTransforms.Color.Orange]) + rightBorder);
       }
       ns.print(divLineLongBottom.padEnd(BOX_WIDTH));
       
