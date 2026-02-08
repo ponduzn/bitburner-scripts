@@ -6,6 +6,9 @@ import {
 export async function main(ns) {
     ns.disableLog("ALL");
     ns.ui.openTail();
+    ns.ui.resizeTail(845, 250);
+    ns.ui.setTailTitle("Sleeves Manager");
+    ns.ui.moveTail(+1520, +1025);
 
     const BOX_WIDTH = 87;
     const leftBorder = TextTransforms.apply("| ", [TextTransforms.Color.Black]);
@@ -27,14 +30,15 @@ export async function main(ns) {
             let sleeves = ns.sleeve.getSleeve(i);
             let fundsFraction = 0.04;
             const hasGang = ns.gang.inGang();
-            const minSleeveStat = sleeves.skills.agility >= 50 &&
-                                  sleeves.skills.strength >= 50 &&
-                                  sleeves.skills.hacking >= 10 &&
-                                  sleeves.skills.defense >= 50 &&
-                                  sleeves.skills.dexterity >= 50;
-            let combatStatThresh = 50;
+            let combatStatThresh = 60;
+            let defensiveStatThresh = 35;
             let hackStatThresh = 10;
-            let shockThresh = 95;
+            const homicideReady = 
+              sleeves.skills.strength >= combatStatThresh &&
+              sleeves.skills.dexterity >= combatStatThresh &&
+              sleeves.skills.agility >= defensiveStatThresh &&
+              sleeves.skills.defense >= defensiveStatThresh;
+            let shockThresh = 80;
             let syncThresh = 5;
             let playerWork = ns.singularity.getCurrentWork();
             const karmaLevel = ns.heart.break();
@@ -60,14 +64,15 @@ export async function main(ns) {
             //If gang unlocked, then increase shock and sync threshold.
             if (hasGang && sleeves.shock <= shockThresh) shockThresh = 0;
             if (hasGang && sleeves.sync >= syncThresh) syncThresh = 50;
-            if (minSleeveStat && karmaLevel < karmaThresh) {
+            if (homicideReady && karmaLevel < karmaThresh) {
                 combatStatThresh = 200;
                 hackStatThresh = 100;
+                defensiveStatThresh = 100;
             }
 
             //Sleeve 0 mirroring player work.
             if (i === MIRROR_SLEEVE) {
-                if (playerWork?.type === "FACTION" || playerWork?.type === "COMPANY") {
+                if (playerWork?.type === "FACTION" || playerWork?.type === "COMPANY" || playerWork?.type === "CLASS") {
                     const task = ns.sleeve.getTask(i);
 
                     if (playerWork.type === "FACTION") {
@@ -114,25 +119,25 @@ export async function main(ns) {
                     ns.sleeve.setToCommitCrime(i, "Mug");
                 }
             } else if (sleeves.shock <= shockThresh && sleeves.sync >= syncThresh) {
-                if (sleeves.skills.strength <= combatStatThresh) {
+                if (sleeves.skills.strength < combatStatThresh) {
                     ns.sleeve.setToGymWorkout(i, "Powerhouse Gym", "str");
-                } else if (sleeves.skills.dexterity <= combatStatThresh) {
+                } else if (sleeves.skills.dexterity < combatStatThresh) {
                     ns.sleeve.setToGymWorkout(i, "Powerhouse Gym", "dex");
-                } else if (sleeves.skills.agility <= combatStatThresh) {
+                } else if (sleeves.skills.agility < combatStatThresh) {
                     ns.sleeve.setToGymWorkout(i, "Powerhouse Gym", "agi");
-                } else if (sleeves.skills.defense <= combatStatThresh) {
+                } else if (sleeves.skills.defense < combatStatThresh) {
                     ns.sleeve.setToGymWorkout(i, "Powerhouse Gym", "def");
-                } else if (sleeves.skills.hacking <= hackStatThresh) {
+                } else if (sleeves.skills.hacking < hackStatThresh) {
                     ns.sleeve.setToUniversityCourse(i, "Rothman University", "Algorithms");
                 } else {
-                    if (minSleeveStat) {
-                        if (sleeves.skills.strength >= 200) {
+                    if (homicideReady) {
+                        if (!hasGang) {
                             if (task?.type !== "CRIME" || task.crimeType !== sleeveCrime) {
                                 ns.sleeve.setToCommitCrime(i, sleeveCrime);
                             }
                         } else {
-                            if (task?.type !== "CRIME" || task.crimeType !== "Mug") {
-                                ns.sleeve.setToCommitCrime(i, "Mug");
+                            if (hasGang) {
+                                ns.sleeve.setToUniversityCourse(i, "Rothman University", "Algorithms");
                             }
                         }
                     }
