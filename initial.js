@@ -7,8 +7,9 @@ export async function main(ns) {
   ns.disableLog("ALL");
   ns.clearLog();
   ns.ui.openTail();
-  ns.ui.resizeTail(340, 390);
+  ns.ui.resizeTail(340, 405);
   ns.ui.setTailTitle("Initialization");
+  ns.ui.moveTail(+1260, +30);
 
   const home = "home";
   const started = {
@@ -24,7 +25,8 @@ export async function main(ns) {
         autoJoinFac: false,
         buyProgScr: false,
         sleeves: false,
-        homeUpg: false
+        homeUpg: false,
+        contractSolve: false
   };
 
   while (true) {
@@ -81,7 +83,7 @@ export async function main(ns) {
       if (ns.exec("hacknet-server-autobuy-roi.js", home) !== 0) started.hacknetScr = true;
     }
     //Auto backdoor
-    if (!started.backdoorScr && myHackLevel > 100 && !ns.isRunning("backdoor.js", home)) {
+    if (!started.backdoorScr && myHackLevel > 50 && !ns.isRunning("backdoor.js", home)) {
       if (ns.exec("backdoor.js", home) !== 0) started.backdoorScr = true;
     }
     //Hack'n rep boost on home.
@@ -89,8 +91,13 @@ export async function main(ns) {
       if (ns.exec("homehackboost.js", home) !== 0) started.homeBoostScr = true;
     }
     //Auto buy augments and restart.
-    if (!started.augAutoBuy && myMoney > 5_000_000_000 && !ns.isRunning("auto-augment-buy-reset.js", home)) {
+    if (!started.augAutoBuy && hasGang && myMoney > 5_000_000_000 && !ns.isRunning("auto-augment-buy-reset.js", home)) {
       if (ns.exec("auto-augment-buy-reset.js", home) !== 0) started.augAutoBuy = true;
+    }
+
+    //Auto contract solver.
+    if (!started.contractSolve && myMoney > 5_000_000 && !ns.isRunning("contract-find-solve.js", home)) {
+      if (ns.exec("contract-find-solve.js", home) !== 0) started.contractSolve = true;
     }
 
 
@@ -108,6 +115,7 @@ export async function main(ns) {
     if (ns.isRunning("buy-programs.js", home)) started.buyProgScr = true;
     if (ns.isRunning("sleevesV3.js", home)) started.sleeves = true;
     if (ns.isRunning("homeupgrade.js", home)) started.homeUpg = true;
+    if (ns.isRunning("contract-find-solve.js", home)) started.contractSolve = true;
 
 
     //logging:
@@ -142,6 +150,8 @@ export async function main(ns) {
     if (started.sleeves === false) ns.print(leftBorder + "Sleeves automation".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
     if (started.homeUpg === true) ns.print(leftBorder + "Home upgrading".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
     if (started.homeUpg === false) ns.print(leftBorder + "Home upgrading".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
+    if (started.contractSolve === true) ns.print(leftBorder + "Contract Solver".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("true".padEnd(5), [TextTransforms.Color.ChartsBlue]) + rightBorder);
+    if (started.contractSolve === false) ns.print(leftBorder + "Contract Solver".padEnd(BOX_WIDTH) + " = " + TextTransforms.apply("false".padEnd(5), [TextTransforms.Color.DRed]) + rightBorder);
     ns.print(divLineLong);
 
     //Exit if all flags = true.
